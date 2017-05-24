@@ -269,11 +269,11 @@ func (client *AMIClient) Close() {
 
 func (client *AMIClient) notifyResponse(response *AMIResponse) {
 	go func() {
-		client.mutexAsyncAction.RLock()
+		client.mutexAsyncAction.Lock()
 		client.response[response.ID] <- response
 		close(client.response[response.ID])
 		delete(client.response, response.ID)
-		client.mutexAsyncAction.RUnlock()
+		client.mutexAsyncAction.Unlock()
 	}()
 }
 
