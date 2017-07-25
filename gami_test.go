@@ -3,6 +3,7 @@ package gami
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"net/textproto"
@@ -29,7 +30,7 @@ func TestLogin(t *testing.T) {
 	}
 	go ami.Run()
 	defer ami.Close()
-	defaultInstaller(t, ami)
+	// defaultInstaller(t, ami)
 
 	//example mocking login of asterisk
 	srv.Mock("Login", func(params textproto.MIMEHeader) map[string]string {
@@ -50,7 +51,7 @@ func TestMultiAsyncActions(t *testing.T) {
 	}
 	go ami.Run()
 	defer ami.Close()
-	defaultInstaller(t, ami)
+	// defaultInstaller(t, ami)
 
 	tests := 10
 	workers := 5
@@ -130,17 +131,18 @@ func (c *amiServer) do(listener net.Listener) {
 		fmt.Fprintf(conn, "Asterisk Call Manager\r\n")
 		tconn := textproto.NewConn(conn)
 		//install event HeartBeat
-		go func(conn *textproto.Conn) {
-			for now := range time.Tick(time.Second) {
-				fmt.Fprintf(conn.W, "Event: HeartBeat\r\nTime: %d\r\n\r\n",
-					now.Unix())
-			}
-		}(tconn)
+		// go func(conn *textproto.Conn) {
+		// 	for now := range time.Tick(time.Second) {
+		// 		fmt.Fprintf(conn.W, "Event: HeartBeat\r\nTime: %d\r\n\r\n",
+		// 			now.Unix())
+		// 	}
+		// }(tconn)
 
 		go func(conn *textproto.Conn) {
 			defer conn.Close()
 
 			for {
+				log.Println("enter loop")
 				header, err := conn.ReadMIMEHeader()
 				if err != nil {
 					return

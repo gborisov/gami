@@ -84,7 +84,7 @@ var errNotEvent = errors.New("Not Event")
 var ErrNotAMI = errors.New("Server not AMI interface")
 
 // Params for the actions
-type Params map[string]string
+type Params map[string][]string
 
 // AMIClient a connection to AMI server
 type AMIClient struct {
@@ -151,7 +151,7 @@ func UnsecureTLS(c *AMIClient) {
 
 // Login authenticate to AMI
 func (client *AMIClient) Login(username, password string) error {
-	response, err := client.Action("Login", Params{"Username": username, "Secret": password})
+	response, err := client.Action("Login", Params{"Username": []string{username}, "Secret": []string{password}})
 	if err != nil {
 		return err
 	}
@@ -196,20 +196,22 @@ func (client *AMIClient) AsyncAction(action string, params Params) (<-chan *AMIR
 		params = Params{}
 	}
 	if _, ok := params["ActionID"]; !ok {
-		params["ActionID"] = responseChanGamiID + "_" + fmt.Sprintf("%d", rand.Intn(1000000))
+		params["ActionID"] = []string{responseChanGamiID + "_" + fmt.Sprintf("%d", rand.Intn(1000000))}
 	}
 
-	if _, ok := client.response[params["ActionID"]]; !ok {
-		client.response[params["ActionID"]] = make(chan *AMIResponse, 1)
+	if _, ok := client.response[params["ActionID"][0]]; !ok {
+		client.response[params["ActionID"][0]] = make(chan *AMIResponse, 1)
 	}
 	for k, v := range params {
-		output = output + fmt.Sprintf("%s: %s\r\n", k, strings.TrimSpace(v))
+		for _, s := range v {
+			output = output + fmt.Sprintf("%s: %s\r\n", k, strings.TrimSpace(s))
+		}
 	}
 	if err := client.conn.PrintfLine("%s", output); err != nil {
 		return nil, err
 	}
 
-	return client.response[params["ActionID"]], nil
+	return client.response[params["ActionID"][0]], nil
 }
 
 // Action send with params
@@ -263,7 +265,9 @@ func (client *AMIClient) Run() {
 
 // Close the connection to AMI
 func (client *AMIClient) Close() {
-	client.Action("Logoff", nil)
+	// this blocks closing when connection
+	// is already lost
+	// client.Action("Logoff", nil)
 	(client.connRaw).Close()
 }
 
