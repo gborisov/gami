@@ -3,7 +3,7 @@ package gami
 import (
 	"bytes"
 	"fmt"
-	"log"
+	// "log"
 	"math/rand"
 	"net"
 	"net/textproto"
@@ -142,7 +142,7 @@ func (c *amiServer) do(listener net.Listener) {
 			defer conn.Close()
 
 			for {
-				log.Println("enter loop")
+				// log.Println("enter loop")
 				header, err := conn.ReadMIMEHeader()
 				if err != nil {
 					return
